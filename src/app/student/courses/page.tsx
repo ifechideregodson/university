@@ -16,10 +16,22 @@ export default function Courses() {
   async function loadCourses() {
     setLoading(true);
     try {
-      const response = await fetch("/api/data?action=list_courses");
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Unable to load courses");
-      setCourses(data.courses || []);
+      const [courseResponse, registrationResponse] = await Promise.all([
+        fetch("/api/data?action=list_courses", { cache: "no-store" }),
+        fetch("/api/data?action=list_student_courses", { cache: "no-store" }),
+      ]);
+
+      const courseData = await courseResponse.json();
+      const registrationData = await registrationResponse.json();
+
+      if (!courseResponse.ok) throw new Error(courseData.error || "Unable to load courses");
+      if (!registrationResponse.ok) throw new Error(registrationData.error || "Unable to load registration");
+
+      setCourses(Array.isArray(courseData.courses) ? courseData.courses : []);
+
+      const registrations = Array.isArray(registrationData.courses) ? registrationData.courses : [];
+      const current = registrations[0];
+      setSelected(Array.isArray(current?.courseIds) ? current.courseIds.map(String) : []);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to load courses.");
     } finally { setLoading(false); }
@@ -54,7 +66,7 @@ export default function Courses() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Course Registration</h1>
-          <p className="muted">Select courses for your current semester and submit your registration.</p>
+          <p className="muted">Select courses for your current semester. Your existing registration is loaded automatically.</p>
         </div>
         <button className="btn btn-secondary" onClick={loadCourses} disabled={loading}><RefreshCw size={16} /> Refresh</button>
       </div>
