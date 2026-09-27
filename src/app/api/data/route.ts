@@ -21,6 +21,15 @@ const allowed = new Set([
   "list_assignments",
   "list_materials",
   "list_results",
+  "list_exam_attempts",
+  "list_timetable",
+  "list_attendance",
+  "list_transcript",
+  "list_notifications",
+  "list_id_card",
+  "list_reports",
+  "list_academic_structure",
+  "list_system_status",
 ]);
 
 export async function GET(request: Request) {
