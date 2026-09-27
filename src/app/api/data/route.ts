@@ -29,6 +29,7 @@ const allowed = new Set([
   "list_id_card",
   "list_reports",
   "list_academic_structure",
+  "list_academic_sessions",
   "list_system_status",
 ]);
 
