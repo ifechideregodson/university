@@ -52,7 +52,7 @@ export function Sidebar({ role }: { role: Role }) {
   const pathname = usePathname();
   return (
     <aside className="sidebar">
-      <div className="brand"><GraduationCap size={24} /><span>Online University</span></div>
+      <div className="brand"><GraduationCap size={24} /><span>Doorway</span></div>
       <nav className="nav">
         {links[role].map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} className={pathname === href ? "nav-link active" : "nav-link"}>
