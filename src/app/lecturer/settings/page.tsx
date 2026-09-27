@@ -1,0 +1,1 @@
+import {PortalLayout} from "@/components/PortalLayout";export default function LecturerSettings(){return <PortalLayout role="lecturer" title="Settings"><h1 className="page-title">Lecturer Settings</h1><div className="card" style={{marginTop:20}}><p>Profile, notification and teaching preferences will be managed here.</p></div></PortalLayout>}
