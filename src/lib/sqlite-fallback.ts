@@ -230,6 +230,17 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
     return { ok: true, source: "sqlite-fallback", id: key };
   }
 
+  if (action === "reset_student_password") {
+    const studentId = String(payload.studentId || payload.id || "");
+    const student = first("students", studentId);
+    if (!student) throw new Error("Student not found");
+    const email = String(student.email || "");
+    const user = list("users").find((u: any) => String(u.email || "").toLowerCase() === email.toLowerCase() || String(u.id || "") === studentId);
+    if (!user) throw new Error("Student login account not found");
+    upsert("users", user.id, { ...user, password: String(payload.password || ""), mustChangePassword: true });
+    return { ok: true, source: "sqlite-fallback", id: user.id };
+  }
+
   if (action === "update_student_status") {
     const id = String(payload.studentId || payload.id || "");
     const student = first("students", id);
