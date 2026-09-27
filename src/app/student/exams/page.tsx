@@ -1,0 +1,1 @@
+import {PortalLayout} from "@/components/PortalLayout";import {exams} from "@/lib/demo-data";import {ExamClient} from "./ExamClient";export default function Exams(){return <PortalLayout role="student" title="Examinations"><h1 className="page-title">Online Examinations</h1><ExamClient exam={exams[0]}/></PortalLayout>}
