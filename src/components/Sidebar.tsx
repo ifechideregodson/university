@@ -38,6 +38,7 @@ const links: Record<Role, { href: string; label: string; icon: React.ComponentTy
     { href: "/admin/students", label: "Students", icon: Users },
     { href: "/admin/courses", label: "Courses", icon: BookOpen },
     { href: "/admin/academics", label: "Academics", icon: GraduationCap },
+    { href: "/admin/assignments", label: "Lecturer Assignments", icon: UserCheck },
     { href: "/admin/admissions", label: "Admissions", icon: UserCheck },
     { href: "/admin/finance", label: "Finance", icon: CreditCard },
     { href: "/admin/exams", label: "Exams", icon: ClipboardList },
