@@ -1,0 +1,1 @@
+import "./globals.css";import ServiceWorker from "./ServiceWorker";import type { Metadata } from "next";export const metadata:Metadata={title:"Online University",description:"Online university learning and administration platform"};export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><ServiceWorker />{children}</body></html>}
