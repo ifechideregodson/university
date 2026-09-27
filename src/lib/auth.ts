@@ -25,13 +25,10 @@ export function verifySession(token?: string): Session | null {
     const a = Buffer.from(sig), b = Buffer.from(expected);
     if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
     return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 export async function getSession(): Promise<Session | null> {
   const { cookies } = await import("next/headers");
-  const token = (await cookies()).get("ou_session")?.value;
-  return verifySession(token);
+  return verifySession((await cookies()).get("ou_session")?.value);
 }
