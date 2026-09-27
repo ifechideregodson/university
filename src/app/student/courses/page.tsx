@@ -1,1 +1,97 @@
-"use client";import {useEffect,useState} from "react";import {PortalLayout} from "@/components/PortalLayout";import {saveOfflineRecord} from "@/lib/db";type Course={id:string;code:string;title:string;unit:number;description?:string};export default function Courses(){const[courses,setCourses]=useState<Course[]>([]),[selected,setSelected]=useState<string[]>([]),[message,setMessage]=useState(""),[saving,setSaving]=useState(false);useEffect(()=>{fetch("/api/data?action=list_courses").then(r=>r.json()).then(d=>{const cs=d.courses||[];setCourses(cs);setSelected(cs.slice(0,3).map((c:Course)=>c.id))}).catch(()=>setCourses([]))},[]);async function register(){setSaving(true);try{const payload={courseIds:selected};const r=await fetch("/api/courses/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});if(!r.ok)throw new Error();setMessage("Course registration submitted successfully.")}catch{await saveOfflineRecord({id:`course-registration-${Date.now()}`,kind:"course-registration",payload:{courseIds:selected},updatedAt:Date.now(),synced:false});setMessage("Saved offline. Registration will synchronize when available.")}finally{setSaving(false)}}return <PortalLayout role="student" title="Course Registration"><h1 className="page-title">Course Registration</h1><div className="grid grid-2" style={{marginTop:20}}>{courses.map(c=><div className="card" key={c.id}><span className="badge">{c.code} · {c.unit} Units</span><h2>{c.title}</h2><p className="muted">{c.description}</p><label><input type="checkbox" checked={selected.includes(c.id)} onChange={()=>setSelected(s=>s.includes(c.id)?s.filter(x=>x!==c.id):[...s,c.id])}/> Register this course</label></div>)}</div><button className="btn btn-primary" style={{marginTop:20}} disabled={!selected.length||saving} onClick={register}>{saving?"Saving...":"Submit Registration"}</button>{message&&<p>{message}</p>}</PortalLayout>}
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { BookOpen, CheckCircle2, RefreshCw, Save } from "lucide-react";
+import { PortalLayout } from "@/components/PortalLayout";
+
+type Course = { id: string; code?: string; title?: string; unit?: number; level?: number; semester?: string };
+
+export default function Courses() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  async function loadCourses() {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/data?action=list_courses");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to load courses");
+      setCourses(data.courses || []);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to load courses.");
+    } finally { setLoading(false); }
+  }
+
+  useEffect(() => { loadCourses(); }, []);
+
+  const totalUnits = useMemo(
+    () => courses.filter(c => selected.includes(c.id)).reduce((sum, c) => sum + Number(c.unit || 0), 0),
+    [courses, selected]
+  );
+
+  async function register() {
+    if (!selected.length) return;
+    setSaving(true); setMessage("");
+    try {
+      const response = await fetch("/api/student/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "register_courses", courseIds: selected }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Registration failed");
+      setMessage("Course registration submitted successfully.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Registration failed.");
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <PortalLayout role="student" title="Course Registration">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Course Registration</h1>
+          <p className="muted">Select courses for your current semester and submit your registration.</p>
+        </div>
+        <button className="btn btn-secondary" onClick={loadCourses} disabled={loading}><RefreshCw size={16} /> Refresh</button>
+      </div>
+
+      <div className="grid grid-3" style={{ marginTop: 20 }}>
+        <div className="card"><span className="muted">Selected courses</span><h2>{selected.length}</h2></div>
+        <div className="card"><span className="muted">Total units</span><h2>{totalUnits}</h2></div>
+        <div className="card"><span className="muted">Registration</span><h2>{selected.length ? "Ready" : "Not started"}</h2></div>
+      </div>
+
+      {message && <div className="card" style={{ marginTop: 16 }}>{message}</div>}
+
+      <div className="card" style={{ marginTop: 20 }}>
+        <div className="section-title">
+          <span><BookOpen size={18} /> Available Courses</span>
+          <button className="btn btn-primary" onClick={register} disabled={!selected.length || saving}>
+            <Save size={16} /> {saving ? "Saving..." : "Submit Registration"}
+          </button>
+        </div>
+        {loading ? <p className="muted">Loading courses...</p> : courses.length === 0 ? <p className="muted">No courses are available yet.</p> : (
+          <div className="list">
+            {courses.map(course => {
+              const checked = selected.includes(course.id);
+              return (
+                <label key={course.id} className="list-row" style={{ cursor: "pointer" }}>
+                  <input type="checkbox" checked={checked} onChange={() => setSelected(current => current.includes(course.id) ? current.filter(x => x !== course.id) : [...current, course.id])} />
+                  <div style={{ flex: 1 }}>
+                    <strong>{course.code || "COURSE"} — {course.title || "Untitled course"}</strong>
+                    <div className="muted">{course.unit || 0} unit(s) · Level {course.level || "—"} · {course.semester || "Current semester"}</div>
+                  </div>
+                  {checked && <CheckCircle2 size={20} />}
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </PortalLayout>
+  );
+}
