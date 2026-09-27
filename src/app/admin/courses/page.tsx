@@ -1,3 +1,5 @@
-import { PortalLayout } from "@/components/PortalLayout";
-import { courses } from "@/lib/demo-data";
-export default function AdminCourses(){return <PortalLayout role="admin" title="Course Administration"><h1 className="page-title">Courses</h1><div className="card" style={{marginTop:20}}><button className="btn btn-primary" style={{marginBottom:15}}>Create Course</button><div className="table-wrap"><table><thead><tr><th>Code</th><th>Title</th><th>Units</th><th>Lecturer</th></tr></thead><tbody>{courses.map(c=><tr key={c.id}><td>{c.code}</td><td>{c.title}</td><td>{c.unit}</td><td>{c.lecturer}</td></tr>)}</tbody></table></div></div></PortalLayout>}
+"use client";
+import {useEffect,useState} from "react";
+import {PortalLayout} from "@/components/PortalLayout";
+type Course={id:string;code:string;title:string;unit:number;lecturer?:string};
+export default function AdminCourses(){const[courses,setCourses]=useState<Course[]>([]);useEffect(()=>{fetch("/api/data?action=list_courses").then(r=>r.json()).then(d=>setCourses(d.courses||[])).catch(()=>setCourses([]))},[]);return <PortalLayout role="admin" title="Course Administration"><h1 className="page-title">Courses</h1><div className="card" style={{marginTop:20}}><button className="btn btn-primary" style={{marginBottom:15}}>Create Course</button><div className="table-wrap"><table><thead><tr><th>Code</th><th>Title</th><th>Units</th><th>Lecturer</th></tr></thead><tbody>{courses.map(c=><tr key={c.id}><td>{c.code}</td><td>{c.title}</td><td>{c.unit}</td><td>{c.lecturer||"—"}</td></tr>)}</tbody></table></div></div></PortalLayout>}
