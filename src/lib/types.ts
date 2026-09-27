@@ -5,6 +5,7 @@ export type Course = {
   code: string;
   title: string;
   unit: number;
+  lecturer?: string;
   level?: number;
   semester?: string;
   description?: string;
