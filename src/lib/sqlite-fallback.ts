@@ -88,6 +88,7 @@ function seed() {
     name: "2026/2027 Academic Session",
     semester: "First"
   });
+  upsert("course_assignments", "assignment-demo-001", { lecturerId: "demo-lecturer", courseId: "csc101", sessionId: "demo-session", semester: "First", status: "Active" });
 }
 
 seed();
@@ -132,11 +133,15 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
   }
 
   if (action === "lecturer_dashboard") {
-    const courses = list("courses");
+    const lecturerId = String(actor.id || "");
+    const assignments = list("course_assignments").filter((a: any) => String(a.lecturerId || "") === lecturerId && String(a.status || "Active").toLowerCase() === "active");
+    const ids = new Set(assignments.map((a: any) => String(a.courseId || "")));
+    const courses = list("courses").filter((c: any) => ids.has(String(c.id)));
+    const students = list("students").filter((st: any) => list("course_registrations").some((r: any) => String(r.studentId || "") === String(st.id) && (r.courseIds || []).some((id: any) => ids.has(String(id)))));
     return {
       source: "sqlite-fallback",
       assignedCourses: courses.length,
-      students: list("students").length,
+      students: students.length,
       pendingGrading: list("assignment_submissions").filter((s: any) => String(s.status || "").toLowerCase() !== "graded").length,
       upcomingExams: list("exams").filter((e: any) => e.published !== false).length,
       courses,
@@ -245,8 +250,12 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
     return { ok: true, source: "sqlite-fallback", id, status };
   }
 
-  if (action === "list_courses" || action === "list_lecturer_courses") return { source: "sqlite-fallback", courses: list("courses") };
-  if (action === "list_students" || action === "list_course_students") return { source: "sqlite-fallback", students: list("students") };
+  if (action === "list_courses") return { source: "sqlite-fallback", courses: list("courses") };
+  if (action === "list_lecturers") return { source: "sqlite-fallback", lecturers: list("users").filter((u: any) => u.role === "lecturer").map(safeUser) };
+  if (action === "list_lecturer_assignments") { const lecturerId = String(actor.id || payload.lecturerId || ""); return { source: "sqlite-fallback", assignments: list("course_assignments").filter((a: any) => !lecturerId || String(a.lecturerId || "") === lecturerId) }; }
+  if (action === "list_lecturer_courses") { const lecturerId = String(actor.id || payload.lecturerId || ""); const assignments = list("course_assignments").filter((a: any) => String(a.lecturerId || "") === lecturerId && String(a.status || "Active").toLowerCase() === "active"); const ids = new Set(assignments.map((a: any) => String(a.courseId || ""))); return { source: "sqlite-fallback", courses: list("courses").filter((c: any) => ids.has(String(c.id))) }; }
+  if (action === "list_students") return { source: "sqlite-fallback", students: list("students") };
+  if (action === "list_course_students") { const courseId = String(payload.courseId || ""); const regs = list("course_registrations").filter((r: any) => Array.isArray(r.courseIds) && r.courseIds.map(String).includes(courseId)); const ids = new Set(regs.map((r: any) => String(r.studentId || ""))); return { source: "sqlite-fallback", students: list("students").filter((st: any) => ids.has(String(st.id))) }; }
   if (action === "list_exams") return { source: "sqlite-fallback", exams: list("exams") };
   if (action === "list_exam_attempts") return { source: "sqlite-fallback", attempts: list("exam_attempts") };
   if (action === "list_student_courses") {
@@ -264,6 +273,9 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
   if (action === "list_assignments") return { source: "sqlite-fallback", assignments: list("assignments") };
   if (action === "list_materials") return { source: "sqlite-fallback", materials: list("materials") };
   if (action === "list_results") return { source: "sqlite-fallback", results: list("results") };
+
+  if (action === "assign_lecturer_course") { const lecturerId=String(payload.lecturerId||""); const courseId=String(payload.courseId||""); if(!lecturerId||!courseId) throw new Error("Lecturer and course are required"); const lecturer=first("users",lecturerId); const course=first("courses",courseId); if(!lecturer||lecturer.role!=="lecturer") throw new Error("Lecturer not found"); if(!course) throw new Error("Course not found"); const sessionId=String(payload.sessionId||"current"); const semester=String(payload.semester||course.semester||"First"); const key=`assignment-${lecturerId}-${courseId}-${sessionId}-${semester}`; upsert("course_assignments",key,{lecturerId,courseId,sessionId,semester,status:"Active",assignedBy:actor.id||null,assignedAt:now}); return {ok:true,source:"sqlite-fallback",id:key}; }
+  if (action === "remove_lecturer_course") { const id=String(payload.assignmentId||""); const assignment=first("course_assignments",id); if(!assignment) throw new Error("Course assignment not found"); upsert("course_assignments",id,{...assignment,status:"Inactive",removedBy:actor.id||null,removedAt:now}); return {ok:true,source:"sqlite-fallback",id}; }
 
   if (action === "register_courses") {
     const studentId = String(payload.studentId || actor.id || "");
