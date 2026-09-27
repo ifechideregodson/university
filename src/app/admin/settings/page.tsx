@@ -1,0 +1,2 @@
+import { PortalLayout } from "@/components/PortalLayout";
+export default function AdminSettings(){return <PortalLayout role="admin" title="University Settings"><h1 className="page-title">Settings</h1><div className="card" style={{marginTop:20}}><h2>Institution</h2><p className="muted">Configure university name, academic sessions, grading scale, notification policies and integrations.</p></div></PortalLayout>}
