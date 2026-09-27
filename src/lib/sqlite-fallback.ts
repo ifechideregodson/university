@@ -324,6 +324,28 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
   if (action === "list_id_card") return { source: "sqlite-fallback", items: list("id_cards") };
   if (action === "list_reports") return { source: "sqlite-fallback", items: list("reports") };
   if (action === "list_academic_structure") return { source: "sqlite-fallback", items: list("academic_structure") };
+  if (action === "list_academic_sessions") return { source: "sqlite-fallback", sessions: list("academic_sessions") };
+
+  if (action === "create_academic_structure") {
+    const record = (payload.record || {}) as Record<string, unknown>;
+    const faculty = String(record.faculty || "").trim();
+    const department = String(record.department || "").trim();
+    const programme = String(record.programme || "").trim();
+    if (!faculty && !department && !programme) throw new Error("Enter at least one academic structure name");
+    const id = String(record.id || ("academic-" + Date.now()));
+    upsert("academic_structure", id, { ...record, id, status: "Active", createdBy: actor.id || null });
+    return { ok: true, source: "sqlite-fallback", id };
+  }
+
+  if (action === "create_academic_session") {
+    const session = (payload.session || {}) as Record<string, unknown>;
+    const name = String(session.name || "").trim();
+    const semester = String(session.semester || "").trim();
+    if (!name || !semester) throw new Error("Session name and semester are required");
+    const id = String(session.id || ("session-" + Date.now()));
+    upsert("academic_sessions", id, { ...session, id, name, semester, status: session.status || "Active", createdBy: actor.id || null });
+    return { ok: true, source: "sqlite-fallback", id };
+  }
   if (action === "list_system_status") return { source: "sqlite-fallback", items: list("system_status") };
 
   const map: Record<string, string> = {
@@ -337,6 +359,8 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
     grade_assignment: "assignment_grades",
     initialize_payment: "payments",
     create_announcement: "announcements",
+    create_academic_structure: "academic_structure",
+    create_academic_session: "academic_sessions",
     create_user: "users"
   };
 
