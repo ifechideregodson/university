@@ -1,0 +1,2 @@
+import { PortalLayout } from "@/components/PortalLayout";
+export default function AdminExams(){return <PortalLayout role="admin" title="Examinations"><h1 className="page-title">Examination Administration</h1><div className="card" style={{marginTop:20}}><p><strong>CSC101 First Semester CBT</strong></p><p className="muted">Published · 186 registered students</p><button className="btn btn-primary">View Attempts</button></div></PortalLayout>}
