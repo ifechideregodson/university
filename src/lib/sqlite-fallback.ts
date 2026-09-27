@@ -190,8 +190,58 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
     const id = String(payload.admissionId || payload.id || "");
     const admission = first("admissions", id);
     if (!admission) throw new Error("Admission not found");
+
     const status = action === "approve_admission" ? "Approved" : "Rejected";
     upsert("admissions", id, { ...admission, status, reviewedAt: now, reviewedBy: actor.id || null });
+
+    if (action === "approve_admission") {
+      const email = String(admission.email || "").trim().toLowerCase();
+      const fullName = String(admission.fullName || admission.name || "").trim();
+      if (!email || !fullName) throw new Error("Admission is missing applicant name or email");
+
+      const existingUser = list("users").find(
+        (u: any) => String(u.email || "").toLowerCase() === email
+      );
+      const studentId = String(admission.studentId || admission.id || `stu-${Date.now()}`);
+      const matricNo = String(
+        admission.matricNo ||
+        `DW/${new Date().getFullYear()}/${String(Date.now()).slice(-6)}`
+      );
+      const temporaryPassword = String(payload.temporaryPassword || `DW-${String(Date.now()).slice(-8)}!`);
+
+      upsert("students", studentId, {
+        id: studentId,
+        matricNo,
+        name: fullName,
+        email,
+        programme: admission.programme || admission.program || "",
+        level: Number(admission.level || 100),
+        status: "Active",
+        admissionId: id
+      });
+
+      const userId = existingUser?.id || studentId;
+      upsert("users", userId, {
+        ...(existingUser || {}),
+        id: userId,
+        email,
+        fullName,
+        role: "student",
+        password: existingUser?.password || temporaryPassword,
+        mustChangePassword: existingUser ? Boolean(existingUser.mustChangePassword) : true
+      });
+
+      return {
+        ok: true,
+        source: "sqlite-fallback",
+        id,
+        status,
+        studentId,
+        matricNo,
+        temporaryPassword
+      };
+    }
+
     return { ok: true, source: "sqlite-fallback", id, status };
   }
 
