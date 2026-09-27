@@ -1,0 +1,1 @@
+import { NextResponse } from "next/server";export async function GET(){return NextResponse.json({ok:true,service:"online-university",timestamp:new Date().toISOString(),retoolConfigured:Boolean(process.env.RETOOL_API_URL&&process.env.RETOOL_API_KEY)});}
