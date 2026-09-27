@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: online-university
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: RETOOL_API_URL
+        sync: false
+      - key: RETOOL_API_KEY
+        sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_APP_NAME
+        value: Online University
