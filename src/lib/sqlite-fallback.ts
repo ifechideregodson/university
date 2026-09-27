@@ -238,6 +238,16 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
     return { ok: true, source: "sqlite-fallback", id, status: payload.status };
   }
 
+
+  if (action === "list_timetable") return { source: "sqlite-fallback", items: list("timetable") };
+  if (action === "list_attendance") return { source: "sqlite-fallback", items: list("attendance") };
+  if (action === "list_transcript") return { source: "sqlite-fallback", items: list("transcript") };
+  if (action === "list_notifications") return { source: "sqlite-fallback", items: list("notifications") };
+  if (action === "list_id_card") return { source: "sqlite-fallback", items: list("id_cards") };
+  if (action === "list_reports") return { source: "sqlite-fallback", items: list("reports") };
+  if (action === "list_academic_structure") return { source: "sqlite-fallback", items: list("academic_structure") };
+  if (action === "list_system_status") return { source: "sqlite-fallback", items: list("system_status") };
+
   const map: Record<string, string> = {
     create_course: "courses",
     update_course: "courses",
