@@ -171,7 +171,7 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
     const email = String(actor.email || "").toLowerCase();
     const user = list("users").find((u: any) => String(u.email || "").toLowerCase() === email);
     if (!user || user.password !== String(payload.currentPassword || "")) throw new Error("Current password is incorrect");
-    upsert("users", user.id, { ...user, password: String(payload.newPassword || "") });
+    upsert("users", user.id, { ...user, password: String(payload.newPassword || ""), mustChangePassword: false });
     return { ok: true, source: "sqlite-fallback" };
   }
 
