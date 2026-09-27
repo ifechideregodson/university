@@ -7,7 +7,7 @@ const ACTIONS = new Set([
   "list_students","list_admissions","approve_admission","reject_admission",
   "create_course","update_course","publish_result","list_payments",
   "create_announcement","create_user","update_student_status","list_exams",
-  "create_exam"
+  "create_exam","reset_student_password"
 ]);
 
 function generateTemporaryPassword() {
@@ -22,6 +22,20 @@ export async function POST(request: NextRequest) {
 
   try {
     const payload: any = { ...body, actor: session };
+    if (body.action === "reset_student_password") {
+      const temporaryPassword = generateTemporaryPassword();
+      const result: any = await callRetoolWorkflow({
+        ...payload,
+        password: temporaryPassword,
+        mustChangePassword: true,
+      });
+      return NextResponse.json({
+        ...result,
+        temporaryPassword,
+        passwordNotice: "Give this temporary password to the student securely. It is shown only now.",
+      });
+    }
+
     if (body.action === "create_user" && body.user?.role === "student") {
       const temporaryPassword = generateTemporaryPassword();
       payload.password = temporaryPassword;
