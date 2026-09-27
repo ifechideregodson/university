@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { callRetoolWorkflow } from "@/lib/retool";
-const allowed = new Set(["student_dashboard","list_student_courses","list_student_results","list_student_payments","lecturer_dashboard","admin_dashboard","list_courses","list_students","list_exams","list_lecturer_courses","list_course_students"]);
+const allowed = new Set(["student_dashboard","list_student_courses","list_student_results","list_student_payments","lecturer_dashboard","admin_dashboard","list_courses","list_students","list_exams","list_lecturer_courses","list_course_students","list_admissions","list_payments","list_announcements","list_assignments","list_materials","list_results"]);
 export async function GET(request: Request) {
  try {
   const session=await getSession();
