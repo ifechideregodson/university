@@ -1,16 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifySession } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { verifySession } from "./src/lib/auth";
 
 export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-  const protectedArea = path.startsWith("/student") || path.startsWith("/lecturer") || path.startsWith("/admin");
-  if (!protectedArea) return NextResponse.next();
   const session = verifySession(request.cookies.get("ou_session")?.value);
-  if (!session) return NextResponse.redirect(new URL("/login", request.url));
-  if (path.startsWith("/student") && session.role !== "student") return NextResponse.redirect(new URL("/login", request.url));
-  if (path.startsWith("/lecturer") && session.role !== "lecturer") return NextResponse.redirect(new URL("/login", request.url));
-  if (path.startsWith("/admin") && session.role !== "admin") return NextResponse.redirect(new URL("/login", request.url));
+  const pathname = request.nextUrl.pathname;
+  if (pathname.startsWith("/student") || pathname.startsWith("/lecturer") || pathname.startsWith("/admin")) {
+    if (!session) return NextResponse.redirect(new URL("/login", request.url));
+    if (session.mustChangePassword) return NextResponse.redirect(new URL("/change-password", request.url));
+  }
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/student/:path*", "/lecturer/:path*", "/admin/:path*"] };
+export const config = {
+  matcher: ["/student/:path*", "/lecturer/:path*", "/admin/:path*", "/change-password"],
+};
