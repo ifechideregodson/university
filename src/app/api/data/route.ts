@@ -30,6 +30,8 @@ const allowed = new Set([
   "list_reports",
   "list_academic_structure",
   "list_academic_sessions",
+  "list_lecturers",
+  "list_lecturer_assignments",
   "list_system_status",
 ]);
 
