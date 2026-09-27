@@ -1,7 +1,10 @@
 import { PortalLayout } from "@/components/PortalLayout";
-import { StatCard } from "@/components/StatCard";
-import { LiveDashboard } from "@/components/LiveDashboard";
+import { AdminDashboard } from "@/components/AdminDashboard";
 
-export default function Admin(){
- return <PortalLayout role="admin" title="University Administration"><LiveDashboard action="admin_dashboard" fallback={<div><h1 className="page-title">Admin Dashboard</h1><p className="muted">Connect Retool to load live university statistics.</p></div>} render={(d)=> <><h1 className="page-title">Admin Dashboard</h1><p className="muted">Live university administration</p><div className="grid grid-4" style={{marginTop:20}}><StatCard label="Students" value={d.students??0}/><StatCard label="Lecturers" value={d.lecturers??0}/><StatCard label="Programmes" value={d.programmes??0}/><StatCard label="Pending Admissions" value={d.pendingAdmissions??0}/></div><div className="grid grid-2" style={{marginTop:20}}><div className="card"><h2>Academic Session</h2><p><strong>{d.session?.name || "Not configured"}</strong> · {d.session?.semester || ""}</p></div><div className="card"><h2>Administration</h2><p className="muted">Use the navigation to manage students, admissions, courses, examinations, finance and results.</p></div></div></>}/></PortalLayout>;
+export default function Admin() {
+  return (
+    <PortalLayout role="admin" title="University Administration">
+      <AdminDashboard />
+    </PortalLayout>
+  );
 }
