@@ -1,1 +1,69 @@
-"use client";import {useEffect,useState} from "react";import {PortalLayout} from "@/components/PortalLayout";type Course={id:string;code:string;title:string;unit:number};export default function LecturerCourses(){const[courses,setCourses]=useState<Course[]>([]),[form,setForm]=useState({code:"",title:"",unit:"3",level:"100",semester:"First",description:""}),[message,setMessage]=useState("");useEffect(()=>{fetch("/api/data?action=list_lecturer_courses").then(r=>r.json()).then(d=>setCourses(d.courses||[]))},[]);async function createCourse(e:React.FormEvent){e.preventDefault();setMessage("Saving...");const res=await fetch("/api/lecturer/action",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"create_course",course:{...form,unit:Number(form.unit),level:Number(form.level)}})});setMessage(res.ok?"Course saved successfully.":"Could not save course.");if(res.ok){const r=await fetch("/api/data?action=list_lecturer_courses");const d=await r.json();setCourses(d.courses||[])}}return <PortalLayout role="lecturer" title="Course Management"><div className="content"><h1 className="page-title">Course Management</h1><div className="grid grid-2" style={{marginTop:20}}><section className="card"><h2>Create course</h2><form onSubmit={createCourse}><label className="label">Course code</label><input className="input" required value={form.code} onChange={e=>setForm({...form,code:e.target.value})}/><label className="label">Title</label><input className="input" required value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/><label className="label">Units</label><input className="input" required value={form.unit} onChange={e=>setForm({...form,unit:e.target.value})}/><label className="label">Level</label><input className="input" required value={form.level} onChange={e=>setForm({...form,level:e.target.value})}/><button className="btn btn-primary" style={{marginTop:15}}>Create course</button><p>{message}</p></form></section><section className="card"><h2>Current catalogue</h2><table><tbody>{courses.map(c=><tr key={c.id}><td>{c.code}</td><td>{c.title}</td><td>{c.unit}</td></tr>)}</tbody></table></section></div></div></PortalLayout>}
+"use client";
+
+import { useEffect, useState } from "react";
+import { PortalLayout } from "@/components/PortalLayout";
+
+type Course = { id: string; code?: string; title?: string; unit?: number; level?: number; semester?: string };
+
+export default function LecturerCourses() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function load() {
+    setLoading(true);
+    setError("");
+    try {
+      const r = await fetch("/api/data?action=list_lecturer_courses");
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Unable to load assigned courses");
+      setCourses(d.courses || []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to load assigned courses");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  return (
+    <PortalLayout role="lecturer" title="Assigned Courses">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">My Assigned Courses</h1>
+          <p className="muted">These are the courses assigned to your lecturer account by university administration.</p>
+        </div>
+        <button className="button secondary" onClick={load} disabled={loading}>Refresh</button>
+      </div>
+
+      {error && <div className="card" style={{ marginTop: 16 }}><p className="error">{error}</p></div>}
+
+      <div className="card" style={{ marginTop: 20 }}>
+        <h2>Current Teaching Load</h2>
+        <p className="muted">{loading ? "Loading…" : courses.length + " assigned course(s)"}</p>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Course</th><th>Units</th><th>Level</th><th>Semester</th><th>Teaching Actions</th></tr></thead>
+            <tbody>
+              {courses.length ? courses.map(c => (
+                <tr key={c.id}>
+                  <td>{c.code || "—"}</td>
+                  <td>{c.title || "—"}</td>
+                  <td>{c.unit ?? "—"}</td>
+                  <td>{c.level ?? "—"}</td>
+                  <td>{c.semester || "—"}</td>
+                  <td>
+                    <span className="muted">Attendance · Materials · Assignments · Results</span>
+                  </td>
+                </tr>
+              )) : (
+                <tr><td colSpan={6} className="muted">No courses have been assigned to you yet. Contact university administration.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </PortalLayout>
+  );
+}
