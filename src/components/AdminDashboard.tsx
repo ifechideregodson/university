@@ -10,7 +10,7 @@ export function AdminDashboard() {
       fallback={
         <div>
           <h1 className="page-title">Admin Dashboard</h1>
-          <p className="muted">Connect Retool to load live university statistics.</p>
+          <p className="muted">SQLite is active. Retool is optional and can be connected later.</p>
         </div>
       }
       render={(d) => (
