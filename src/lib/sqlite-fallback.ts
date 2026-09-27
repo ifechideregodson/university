@@ -199,7 +199,15 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
   if (action === "list_students" || action === "list_course_students") return { source: "sqlite-fallback", students: list("students") };
   if (action === "list_exams") return { source: "sqlite-fallback", exams: list("exams") };
   if (action === "list_exam_attempts") return { source: "sqlite-fallback", attempts: list("exam_attempts") };
-  if (action === "list_student_courses") return { source: "sqlite-fallback", courses: list("course_registrations") };
+  if (action === "list_student_courses") {
+    const studentId = String(actor.id || payload.studentId || "");
+    return {
+      source: "sqlite-fallback",
+      courses: list("course_registrations").filter(
+        (r: any) => String(r.studentId || "") === studentId
+      )
+    };
+  }
   if (action === "list_student_results") return { source: "sqlite-fallback", results: list("results") };
   if (action === "list_student_payments" || action === "list_payments") return { source: "sqlite-fallback", payments: list("payments") };
   if (action === "list_announcements") return { source: "sqlite-fallback", announcements: list("announcements") };
@@ -208,15 +216,24 @@ export async function callSqliteFallback(payload: Payload): Promise<any> {
   if (action === "list_results") return { source: "sqlite-fallback", results: list("results") };
 
   if (action === "register_courses") {
-    const key = `registration-${String(payload.studentId || actor.id || "student")}-${Date.now()}`;
+    const studentId = String(payload.studentId || actor.id || "");
+    if (!studentId) throw new Error("Student account is required");
+
+    const sessionId = String(payload.sessionId || "current");
+    const semesterId = String(payload.semesterId || "current");
+    const courseIds = Array.isArray(payload.courseIds) ? payload.courseIds.map(String) : [];
+    if (!courseIds.length) throw new Error("Select at least one course");
+
+    const key = `registration-${studentId}-${sessionId}-${semesterId}`;
     upsert("course_registrations", key, {
-      studentId: payload.studentId || actor.id,
-      courseIds: payload.courseIds,
-      sessionId: payload.sessionId,
-      semesterId: payload.semesterId,
-      status: "Registered"
+      studentId,
+      courseIds: [...new Set(courseIds)],
+      sessionId,
+      semesterId,
+      status: "Registered",
+      registeredAt: now
     });
-    return { ok: true, source: "sqlite-fallback", id: key };
+    return { ok: true, source: "sqlite-fallback", id: key, status: "Registered" };
   }
 
   if (action === "submit_exam") {
