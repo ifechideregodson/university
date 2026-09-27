@@ -10,7 +10,23 @@ export function AdminDashboard() {
       fallback={
         <div>
           <h1 className="page-title">Admin Dashboard</h1>
-          <p className="muted">SQLite is active. Retool is optional and can be connected later.</p>
+          <p className="muted">Local university data is available while Retool is connecting.</p>
+          <div className="grid grid-4" style={{ marginTop: 20 }}>
+            <StatCard label="Students" value={1} />
+            <StatCard label="Lecturers" value={1} />
+            <StatCard label="Courses" value={3} />
+            <StatCard label="Pending Admissions" value={0} />
+          </div>
+          <div className="grid grid-2" style={{ marginTop: 20 }}>
+            <div className="card">
+              <h2>Academic Session</h2>
+              <p><strong>2026/2027 Academic Session</strong> · First semester</p>
+            </div>
+            <div className="card">
+              <h2>Administration</h2>
+              <p className="muted">Students, admissions, courses, examinations, finance, reports and system controls are available from the sidebar.</p>
+            </div>
+          </div>
         </div>
       }
       render={(d) => (
