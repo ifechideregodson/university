@@ -7,7 +7,7 @@ const ACTIONS = new Set([
   "list_students","list_admissions","approve_admission","reject_admission",
   "create_course","update_course","publish_result","list_payments",
   "create_announcement","create_user","update_student_status","list_exams",
-  "create_exam","reset_student_password","create_academic_structure","create_academic_session"
+  "create_exam","reset_student_password","create_academic_structure","create_academic_session","assign_lecturer_course","remove_lecturer_course"
 ]);
 
 function generateTemporaryPassword() {
