@@ -52,7 +52,41 @@ seed();
 export async function callSqliteFallback(payload:Payload):Promise<any>{
  const action=String(payload.action||""); const actor=payload.actor||{}; const now=new Date().toISOString();
  const collections:any={lecturer_dashboard:["courses","assignments","materials","students"],admin_dashboard:["students","courses","admissions","payments"],student_dashboard:["course_registrations","results","payments"]};
- if(collections[action]){const out:any={source:"sqlite-fallback"}; for(const e of collections[action]) out[e]=list(e); return out;}
+ if(collections[action]){
+  const out:any={source:"sqlite-fallback"};
+  if(action==="admin_dashboard"){
+    const users=list("users"), students=list("students"), courses=list("courses"), admissions=list("admissions"), payments=list("payments"), sessions=list("academic_sessions");
+    out.students=students.length;
+    out.lecturers=users.filter((u:any)=>u.role==="lecturer").length;
+    out.programmes=courses.length;
+    out.pendingAdmissions=admissions.filter((a:any)=>String(a.status||"").toLowerCase()==="pending").length;
+    out.session=sessions[0]||null;
+    return out;
+  }
+  if(action==="student_dashboard"){
+    const registrations=list("course_registrations").filter((r:any)=>String(r.studentId||"")===String(actor.id||""));
+    const results=list("results").filter((r:any)=>String(r.studentId||"")===String(actor.id||""));
+    const payments=list("payments").filter((p:any)=>String(p.studentId||"")===String(actor.id||""));
+    const exams=list("exams").filter((e:any)=>e.published!==false);
+    const student=list("students").find((s:any)=>String(s.email||"").toLowerCase()===String(actor.email||"").toLowerCase())||null;
+    out.student=student;
+    out.registeredCourses=(registrations[0]?.courseIds||[]).length;
+    out.cgpa=results.length ? "—" : "—";
+    out.upcomingExams=exams.length;
+    out.outstandingFees=payments.filter((p:any)=>String(p.status||"").toLowerCase()!=="paid").reduce((sum:number,p:any)=>sum+Number(p.amount||0),0)||"₦0";
+    return out;
+  }
+  if(action==="lecturer_dashboard"){
+    const courses=list("courses"), assignments=list("assignments"), materials=list("materials"), students=list("students");
+    out.assignedCourses=courses.length;
+    out.students=students.length;
+    out.pendingGrading=list("assignment_submissions").filter((s:any)=>String(s.status||"").toLowerCase()!=="graded").length;
+    out.upcomingExams=list("exams").filter((e:any)=>e.published!==false).length;
+    out.courses=courses; out.assignments=assignments; out.materials=materials;
+    return out;
+  }
+  return out;
+}
  if(action==="login_user"){
   const email=String(payload.email||"").toLowerCase();
   const password=String(payload.password||"");
